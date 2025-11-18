@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proposta Comercial - Energia</title>
+    <title>Proposta Comercial - Ótyr Energia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -104,11 +104,7 @@
                     }
                 } catch (error) {
                     console.error('Erro na validação:', error);
-                    // Em caso de erro, você pode escolher:
-                    // Opção 1: Bloquear e mostrar erro
                     setValidationError('Erro ao validar dados. Por favor, tente novamente.');
-                    // Opção 2: Permitir continuar mesmo com erro (descomente a linha abaixo)
-                    // setStep(2);
                 }
 
                 setIsValidating(false);
@@ -334,12 +330,37 @@
                                         </div>
 
                                         <button
-                                            onClick={() => setStep(2)}
-                                            disabled={!formData.clientName || !formData.email || !formData.phone || !formData.cnpj || !formData.companyName || !formData.monthlyConsumption}
-                                            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                            onClick={validateAndContinue}
+                                            disabled={!formData.clientName || !formData.email || !formData.phone || !formData.cnpj || !formData.companyName || !formData.monthlyConsumption || isValidating}
+                                            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
-                                            Continuar
+                                            {isValidating ? (
+                                                <>
+                                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Validando...
+                                                </>
+                                            ) : (
+                                                'Continuar'
+                                            )}
                                         </button>
+                                        
+                                        {validationError && (
+                                            <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                                                <div className="flex items-start gap-3">
+                                                    <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <div>
+                                                        <h3 className="font-bold text-red-900 mb-1">Não foi possível continuar</h3>
+                                                        <p className="text-sm text-red-700">{validationError}</p>
+                                                        <p className="text-sm text-red-600 mt-2">Entre em contato: <a href="mailto:contato@otyr.com.br" className="underline font-medium">contato@otyr.com.br</a></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -530,22 +551,3 @@
                                             <button
                                                 onClick={handleSubmit}
                                                 disabled={!formData.signature}
-                                                className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
-                                            >
-                                                Finalizar Proposta
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
