@@ -38,6 +38,8 @@
             const [isDrawing, setIsDrawing] = useState(false);
             const canvasRef = useRef(null);
             const [submitted, setSubmitted] = useState(false);
+            const [isValidating, setIsValidating] = useState(false);
+            const [validationError, setValidationError] = useState('');
 
             const plans = [
                 { duration: 12, discount: 10, color: 'bg-blue-50 border-blue-200' },
@@ -61,6 +63,55 @@
                     ...prev,
                     [name]: type === 'checkbox' ? checked : value
                 }));
+            };
+
+            // VALIDAÇÃO NA ETAPA 1 - Envia para Make e aguarda resposta
+            const validateAndContinue = async () => {
+                setIsValidating(true);
+                setValidationError('');
+
+                // URL do webhook do Make para VALIDAÇÃO
+                const MAKE_VALIDATION_URL = 'https://hook.us1.make.com/35l97fi45nbu3q59r6kyhfq7sx6m7xsl';
+
+                try {
+                    const response = await fetch(MAKE_VALIDATION_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'validate',
+                            clientName: formData.clientName,
+                            email: formData.email,
+                            phone: formData.phone,
+                            cnpj: formData.cnpj,
+                            companyName: formData.companyName,
+                            monthlyConsumption: formData.monthlyConsumption,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    // O Make deve retornar: { "approved": true/false, "message": "Motivo" }
+                    if (result.approved === true) {
+                        // Cliente aprovado - pode continuar
+                        setStep(2);
+                    } else {
+                        // Cliente não aprovado
+                        setValidationError(
+                            result.message || 
+                            'Desculpe, no momento não podemos prosseguir com sua proposta. Entre em contato conosco para mais informações.'
+                        );
+                    }
+                } catch (error) {
+                    console.error('Erro na validação:', error);
+                    // Em caso de erro, você pode escolher:
+                    // Opção 1: Bloquear e mostrar erro
+                    setValidationError('Erro ao validar dados. Por favor, tente novamente.');
+                    // Opção 2: Permitir continuar mesmo com erro (descomente a linha abaixo)
+                    // setStep(2);
+                }
+
+                setIsValidating(false);
             };
 
             const startDrawing = (e) => {
@@ -102,6 +153,8 @@
             const handleSubmit = async () => {
                 console.log('Dados da proposta:', formData);
                 
+                // INTEGRAÇÃO MAKE - Webhook configurado para ENVIO FINAL
+                const MAKE_WEBHOOK_URL = 'https://hook.us1.make.com/35l97fi45nbu3q59r6kyhfq7sx6m7xsl';
                 
                 try {
                     const response = await fetch(MAKE_WEBHOOK_URL, {
@@ -110,6 +163,7 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
+                            action: 'submit',
                             ...formData,
                             dataEnvio: new Date().toISOString(),
                             economia: calculations ? calculations.savings : '0',
@@ -165,9 +219,13 @@
                             <div className="bg-gradient-to-r from-blue-600 to-green-600 p-8 text-white">
                                 <div className="mb-6 flex justify-center">
                                     <img 
-                                        src="https://raw.githubusercontent.com/rafaelfenix2001-rgb/TYRenergia/main/TYRLOGO.jpg" 
+                                        src="https://raw.githubusercontent.com/rafaelfenix2001-rgb/TYRenergia/main/TYRLOGO.png" 
                                         alt="Ótyr Mercado Livre de Energia" 
                                         className="h-24 md:h-32 w-auto object-contain"
+                                        onError={(e) => {
+                                            console.error('Erro ao carregar logo');
+                                            e.target.style.display = 'none';
+                                        }}
                                     />
                                 </div>
                                 <div className="text-center">
